@@ -1,7 +1,7 @@
 /**
- * White theme for reveal.js. This is the opposite of the 'black' theme.
+ * Jolicode theme for reveal.js.
  *
- * Copyright (C) 2015 Hakim El Hattab, http://hakim.se
+ * Copyright (C) 2016 JoliCode, http://jolicode.com
  */
 
 
@@ -28,11 +28,11 @@ $headingTextShadow: none;
 $headingLetterSpacing: normal;
 $headingTextTransform: uppercase;
 $headingFontWeight: 600;
-$linkColor: #2a76dd;
+$linkColor: #F7D325;
 $linkColorHover: lighten( $linkColor, 15% );
 $selectionBackgroundColor: lighten( $linkColor, 25% );
 
-$heading1Size: 2.5em;
+$heading1Size: 1.8em;
 $heading2Size: 1.6em;
 $heading3Size: 1.3em;
 $heading4Size: 1.0em;
@@ -43,7 +43,10 @@ section.has-dark-background {
 	}
 }
 
-
 // Theme template ------------------------------
 @import "../template/theme";
 // ---------------------------------------------
+
+.reveal pre code {
+	max-height: 700px;
+}

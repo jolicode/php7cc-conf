@@ -16,6 +16,19 @@
 		<link rel="stylesheet" href="css/reveal.css">
 		<link rel="stylesheet" href="css/theme/jolicode.css" id="theme">
 
+		<style>
+			section.inversed-color * {
+				color: #fff;
+			}
+			#logo {
+				margin: 0 auto;
+				height: 1em;
+			}
+			.reveal .slides section .va-middle {
+				vertical-align: middle;
+			}
+		</style>
+
 		<!-- Code syntax highlighting -->
 		<link rel="stylesheet" href="lib/css/zenburn.css">
 
@@ -37,11 +50,442 @@
 		<div class="reveal">
 			<!-- Any section element inside of this container is displayed as a slide -->
 			<div class="slides">
-				<section>
+				<section class="inversed-color" data-background="images/cover.jpg">
 					<h1>A la recherche d'incompatibilités avec PHP 7</h1>
+                    <h3><small style="color: #F7D325;">analyse statique, AST, PHP Parser, php7cc</small></h3>
 					<p>
-						<small>Rdv PHP, 23 fev 2016, par <a href="http://jolicode.com/equipe/loick-piera">Loïck Piera</a> / <a href="https://twitter.com/pyrech">@pyrech</a></small>
+						<small>Rdv PHP - 23 fev 2016 - Loïck Piera</small>
 					</p>
+				</section>
+
+				<section>
+					<h1>Loïck Piera</h1>
+                    <p>Développeur web chez <img id="logo" src="images/jolicode.svg" alt="JoliCode" class="plain va-middle" /></p>
+                    <p><img class="plain va-middle" width="50" src="images/github.png" /> <a href="https://github.com/pyrech">@pyrech</a></p>
+                    <p><img class="plain va-middle" width="50" src="images/twitter.png" /> <a href="https://twitter.com/pyrech">@pyrech</a></p>
+				</section>
+
+				<section>
+					<h1>Introduction</h1>
+				</section>
+
+				<section data-background="images/breaking-news.png">
+				</section>
+
+				<section>
+					<h1>Meilleur moyen de s'assurer la compatibilité à 100 %?</h1>
+					<ul>
+						<li>Une suite de test complète</li>
+						<li>100 % de code coverage</li>
+					</ul>
+                    <p class="fragment">Standard, non ? <img src="images/troll-face.png" class="plain va-middle"></p>
+				</section>
+
+				<section>
+					<h1>Analyse statique complémentaire</h1>
+					<ul>
+						<li>Donne un 1er aperçu</li>
+						<li>Toutes les incompatibilités en one-shot</li>
+					</ul>
+				</section>
+
+				<section>
+					<h1>Analyses statiques à la rescousse</h1>
+				</section>
+
+				<section>
+					<h1>Principe</h1>
+					<ul>
+						<li>Pas d'exécution</li>
+						<li>Analyse "limitée" surtout pour un langage fortement dynamique</li>
+					</ul>
+                </section>
+
+                <section>
+                    <h1>Limites</h1>
+					<pre><code class="hljs php" data-trim>
+function foo(Foo $foo) {
+    $foo->methodToCall();
+}
+                    </code></pre>
+
+                    <div class="fragment">
+                        <p>VS</p>
+
+                        <pre><code class="hljs php" data-trim>
+function bar($bar) {
+    $method = 'yolo_' . $this->getMethodName();
+    $$bar->$method();
+}
+                        </code></pre>
+                    </div>
+            </section>
+
+				<section>
+					<h1>Méthodes d'analyse</h1>
+					<ul>
+						<li>Regex</li>
+						<li>Manipulations de token (via token_get_all())</li>
+						<li>Arbre Syntaxique Abstrait (Abstract Syntax Tree ou AST)</li>
+					</ul>
+				</section>
+
+				<section>
+					<h1>AST</h1>
+				</section>
+
+                <section data-background="images/fuyez.jpg">
+
+                </section>
+
+				<section>
+					<h1>Les AST</h1>
+					<p>
+                        Beaucoup en ont peur
+                    </p>
+                    <p class="fragment">
+						On va voir que c'est simple à manipuler...
+					</p>
+				</section>
+
+				<section>
+					<h1>A quoi ça ressemble ?</h1>
+
+                    <div>
+                        <div class="va-middle" style="display: inline-block; width: 15%">
+                            <pre><code class="hljs php" data-trim>$b = $a + 5;</code></pre>
+                        </div>
+
+                        <div class="fragment va-middle" style="display: inline-block; width: 45%">
+                            <span style="float: left;">=&gt;</span>
+					        <pre><code class="hljs" data-trim>
+Assignment (
+    var: Variable (
+        name: b
+    )
+    expression: Binary Operation Plus (
+        left: Variable (
+            name: a
+        )
+        right: Scalar Left Value (
+            value: 5
+        )
+    )
+)
+                            </code></pre>
+                        </div>
+
+                        <div class="fragment va-middle" style="display: inline-block; width: 30%">
+                            <span style="float: left;">=&gt;</span>
+                            <img class="plain" src="images/analyse-arbre.png" alt="Représentation d'un AST" />
+                        </div>
+                    </div>
+				</section>
+
+				<section>
+					<h1>Avantages de l'AST</h1>
+					<ul>
+						<li>Abstrait certaines syntaxes :
+                            <ul>
+                                <li><code>$foo</code></li>
+                                <li><code>$$bar</code></li>
+                                <li><code>${'foobar'}</code></li>
+                                <li><code>${!${''}=barfoo()}</code></li>
+                            </ul>
+                        </li>
+                        <li>Autre représentation de votre code</li>
+                        <li>Parcours simplifié avec le pattern Visitor</li>
+					</ul>
+				</section>
+
+				<section>
+					<h1>Parser du PHP en PHP</h1>
+					<ul>
+						<li>Coucou <a href="https://github.com/nikic/PHP-Parser">PHP Parser</a></li>
+                        <li>Lib de référence</li>
+                        <li>Créée par Nikita Popov</li>
+					</ul>
+				</section>
+
+				<section>
+					<h1>Utilisation du parser</h1>
+					<pre><code class="hljs php" data-trim>
+$parser = new \PhpParser\Parser(new \PhpParser\Lexer());
+
+foreach ($files as $file) {
+    try {
+        $content = file_get_contents($file);
+
+        if (!empty($content)) {
+            echo sprintf('Parsing du fichier "%s"', $file);
+
+            // Parsing et création des AST
+            $stmts = $parser->parse($content);
+
+            // Traversée des AST
+            // ...
+        }
+    } catch (\PhpParser\Error $e) {
+        echo 'Parse Error: ', $e->getMessage();
+    }
+}
+					</code></pre>
+				</section>
+
+				<section>
+					<h1>Parcours d'AST</h1>
+					<pre><code class="hljs php" data-trim>
+$parser = new \PhpParser\Parser(new \PhpParser\Lexer());
+$traverser = new \PhpParser\NodeTraverser();
+
+$traverser->addVisitor(...);
+
+// …
+
+// Parsing et création de l'AST
+$stmts = $parser->parse($content);
+
+// Traversée des AST
+$traverser->traverse($stmts);
+					</code></pre>
+				</section>
+
+				<section>
+					<h1>Les visiteurs, c'est OKKKAY</h1>
+					<p>
+						Interface \PhpParser\NodeVisitor :
+					</p>
+					<pre><code class="hljs php" data-trim>
+public function beforeTraverse(array $nodes);
+public function enterNode(\PhpParser\Node $node);
+public function leaveNode(\PhpParser\Node $node);
+public function afterTraverse(array $nodes);
+					</code></pre>
+				</section>
+
+				<section>
+					<h1>php7cc</h1>
+				</section>
+
+				<section>
+					<h1>Le(s) projet(s)</h1>
+					<p class="fragment shrink">
+						<a href="https://github.com/jolicode/php7-checker">jolicode/php7-checker</a>
+					</p>
+					<p class="fragment">
+						<a href="https://github.com/sstalle/php7cc">sstalle/php7cc</a>
+					</p>
+				</section>
+
+				<section>
+					<h1>php7cc</h1>
+					<ul>
+                        <li>Outil CLI</li>
+						<li>Installable par <strong>phar</strong>, <strong>Composer</strong> (global / local), <strong>Docker</strong></li>
+						<li><code class="hljs bash" style="font-size: 0.8em;">php7cc [--except=vendor] [--extensions=php,inc,lib] src/</code></li>
+					</ul>
+				</section>
+
+				<section>
+					<h1>Liste des erreurs</h1>
+					<p>
+                        <strong>Redéfinition de classes globales (Error, TypeError, ReflectionType, etc)</strong>
+                        <small style="color: #777;">Multiple default cases</small>
+                        <strong>Constructeur PHP 4</strong>
+						<small style="color: #777; font-size: 0.5em">Bitwise shift par un nombre négatif</small>
+                        <small>Option 'salt' dans password_hash()</small>
+						<small>Nom de paramètre de fonction dupliqué</small>
+                        <strong>Classe nommée bool, int, float, etc</strong>
+						<small style="color: #777; font-size: 0.5em">Utilisation de $HTTP_RAW_POST_DATA</small>
+						<small style="color: #777; font-size: 0.5em">String contenant une notation hexadecimal invalide</small>
+                        <small>Redéfinition de fonctions globales (intdiv, random_int, etc)</small>
+                        <br>
+                        <strong>Appel de fonctions supprimées (mysql_*,  mssql_*, mcrypt_*, etc)</strong>
+						<small>New assignement par référence</small>
+						<small>Eval modifier 'e' dans preg_replace</small>
+					</p>
+                    <p>
+						Et bien d'autres...
+					</p>
+				</section>
+
+				<section>
+					<h1>Résultat</h1>
+					<p style="color:red">
+                        TODO
+						Trouver un projet old
+						https://github.com/search?l=&o=asc&p=2&q=language%3APHP&ref=advsearch&s=updated&type=Repositories&utf8=%E2%9C%93
+						faire un screen
+					</p>
+				</section>
+
+				<section>
+					<h1>Exemples de détection</h1>
+				</section>
+
+				<section>
+					<h1>New assignement par référence</h1>
+					<pre><code class="hljs php" data-trim>
+class Foo {}
+$foo =& new Foo();
+                    </code></pre>
+                    <div class="fragment">
+                        <p>PHP 5 :</p>
+						<pre>Deprecated: Assigning the return value of new by reference is deprecated in /path/to/script.php on line 3</pre>
+                    </div>
+                    <div class="fragment">
+						<p>PHP 7 :</p>
+						<pre>Parse error: syntax error, unexpected 'new' (T_NEW) in /path/to/script.php on line 3</pre>
+					</div>
+				</section>
+
+				<section>
+					<pre><code class="hljs php" data-trim>
+use PhpParser\Node\Expr;
+
+class NewAssignmentByReferenceVisitor extends AbstractVisitor {
+    public function enterNode(\PhpParser\Node $node) {
+        if ($node instanceof Expr\AssignRef && $node->expr instanceof Expr\New_) {
+            $this->addContextMessage('Result of new is assigned by reference', $node);
+        }
+    }
+}
+					</code></pre>
+				</section>
+
+				<section>
+					<h1>Redéfinition de paramètre</h1>
+					<pre><code class="hljs php" data-trim>
+function foo($bar, $bar) {}
+                    </code></pre>
+                    <div class="fragment">
+                        <p>PHP 5 :</p>
+                        <p>OK</p>
+                    </div>
+                    <div class="fragment">
+                        <p>PHP 7 :</p>
+                        <pre>Fatal error: Redefinition of parameter $bar in /path/to/script.php on line 2</pre>
+                    </div>
+				</section>
+
+				<section>
+					<pre><code class="hljs php" data-trim>
+use PhpParser\Node;
+
+class DuplicateFunctionParameterVisitor extends AbstractVisitor {
+    public function enterNode(Node $node) {
+        if (!$node instanceof Node\FunctionLike) return;
+
+        $parametersNames = array();
+
+        foreach ($node->getParams() as $parameter) {
+            $currentParameterName = $parameter->name;
+
+            if (!isset($parametersNames[$currentParameterName])) {
+                $parametersNames[$currentParameterName] = false;
+            }
+            elseif (!$parametersNames[$currentParameterName]) {
+                $this->addContextMessage(
+                    sprintf('Duplicate function parameter name "%s"', $currentParameterName),
+                    $node
+                );
+                $parametersNames[$currentParameterName] = true;
+            }
+        }
+    }
+}
+					</code></pre>
+				</section>
+
+				<section>
+					<h1>Constructeur PHP 4</h1>
+					<pre><code class="hljs php" data-trim>
+class Foo {
+    public function Foo() {}
+}
+                    </code></pre>
+                    <div class="fragment">
+                        <p>PHP 5 :</p>
+                        <p>OK</p>
+                    </div>
+                    <div class="fragment">
+                        <p>PHP 7 :</p>
+                        <p>Conservés mais dépréciés et limité aux cas existants avant PHP 5</p>
+                        <ul>
+                            <li>Aucun constructeur PHP 5+ présent</li>
+                            <li>Pas de namespace (ajouté en PHP 5.3)</li>
+                        </ul>
+                        <pre>Deprecated: Methods with the same name as their class will not be constructors in a<br />future version of PHP;Foo has a deprecated constructor in /path/to/script.php on line 3</pre>
+                    </div>
+				</section>
+
+				<section>
+					<pre style="margin: 0 auto;"><code class="hljs php" data-trim>
+class PHP4ConstructorVisitor extends AbstractVisitor {
+    public function enterNode(Node $node) {
+        if (!$node instanceof Node\Stmt\Class_) return;
+
+        $currentClassName = $node->name;
+        $hasPhp4Constructor = $hasPhp5Constructor = false;
+        $php4ConstructorNode = null;
+
+        // Anonymous class can't use php4 constructor by definition
+        if (empty($currentClassName)) return;
+        // Checks if class is namespaced
+        if (count($node->namespacedName->parts) > 1) return;
+
+        foreach ($node->stmts as $stmt) {
+            if (!$stmt instanceof Node\Stmt\ClassMethod) continue;
+
+            if ($stmt->name === '__construct') $hasPhp5Constructor = true;
+
+            if ($stmt->name === $currentClassName) {
+                $hasPhp4Constructor = true;
+                $php4ConstructorNode = $stmt;
+            }
+        }
+        if ($hasPhp4Constructor && !$hasPhp5Constructor) {
+            $this->addContextMessage('PHP 4 constructors deprecated', $php4ConstructorNode);
+        }
+    }
+}
+					</code></pre>
+				</section>
+
+				<section>
+					<h1>Conclusion</h1>
+				</section>
+
+				<section>
+					<h1>Conclusion</h1>
+					<ul>
+						<li>L'analyse statique et les AST, c'est sympa</li>
+						<li>Ne pas hésiter à dumper les noeuds</li>
+						<li>Utiliser php7cc en + de vos tests pour une migration en douceur</li>
+					</ul>
+				</section>
+
+				<section>
+					<h1>On recrute</h1>
+					<p>
+						Viens faire de la trottinette avec nous
+                        <br>
+                        <br>
+                        <img class="plain" src="images/trotinette.gif">
+					</p>
+				</section>
+
+				<section>
+					<h1>Sources</h1>
+					<ul>
+						<li><a href="http://jolicode.com/blog/l-analyse-statique-dans-le-monde-php">http://jolicode.com/blog/l-analyse-statique-dans-le-monde-php</a></li>
+						<li><a href="https://github.com/sstalle/php7cc">https://github.com/sstalle/php7cc</a></li>
+						<li><a href="https://github.com/nikic/PHP-Parser/tree/master/doc">https://github.com/nikic/PHP-Parser/tree/master/doc</a></li>
+					</ul>
+				</section>
+
+				<section class="inversed-color" data-background="images/jolibeer.jpg">
+					<h1>Let's drink</h1>
 				</section>
 			</div>
 		</div>
@@ -53,6 +497,7 @@
 			// Full list of configuration options available at:
 			// https://github.com/hakimel/reveal.js#configuration
 			Reveal.initialize({
+				width: 1280,
 				controls: true,
 				progress: true,
 				history: true,

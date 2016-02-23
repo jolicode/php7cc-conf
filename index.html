@@ -503,6 +503,11 @@ class PHP4ConstructorVisitor extends AbstractVisitor {
 
 				transition: 'none', // none/fade/slide/convex/concave/zoom
 
+				keyboard: {
+					38: 'prev',
+					40: 'next'
+				},
+
 				// Optional reveal.js plugins
 				dependencies: [
 					{ src: 'lib/js/classList.js', condition: function() { return !document.body.classList; } },
